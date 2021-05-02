@@ -1,30 +1,31 @@
 <template>
   <form id="form" @submit.prevent="sendDataToBack">
-    <p>{{ sectors }}</p>
     <label for="name">Name:</label>
     <input type="text" id="name" name="name" v-model="name"><br>
     <label>Sectors:</label>
     <select multiple="" size="20">
-      <option
+      <custom-option
         v-for="sectorObj in sectors"
         v-bind:key="sectorObj.id"
         :value="sectorObj.id"
-        @click="saveOption(sectorObj)">
-        {{formatName(sectorObj)}}{{ sectorObj['name'] }}
-      </option>
+        :sector-name=formatName(sectorObj)
+        :sector-obj=sectorObj
+        @event="handler">
+      </custom-option>
     </select><br>
     <input type="checkbox" id="terms" name="terms" value="terms" v-model="terms">
     <label for="terms">Agree to terms</label><br>
     <input type="submit" value="Submit">
-    <p>{{ this.options }}</p>
   </form>
 </template>
 
 <script>
 import axios from 'axios'
+import CustomOption from './CustomOption'
 
 export default {
   name: 'Home',
+  components: { CustomOption },
   data () {
     return {
       options: [],
@@ -75,12 +76,13 @@ export default {
           .then((response) => {
             console.log(response)
           })
-      } else {
-        console.log('we have some problem here')
       }
     },
     formatName (sectorObj) {
-      return '\xa0'.repeat(this.spacingMultiplier * sectorObj.indent)
+      return '\xa0'.repeat(this.spacingMultiplier * sectorObj.indent) + sectorObj.name
+    },
+    handler (params) {
+      this.saveOption(params)
     },
     saveOption (obj) {
       if (!this.options.includes(obj.id)) {
