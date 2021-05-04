@@ -1,15 +1,16 @@
 <template>
   <option :style="isClicked ? { 'color': '#45ed32' } : null" @click="toggleIsClicked">
-    {{sectorName}}
+    {{formatName()}}
   </option>
 </template>
 
 <script>
 export default {
   name: 'CustomOption',
-  props: ['sectorName', 'sectorObj'],
+  props: ['sectorObj'],
   data () {
     return {
+      spacingMultiplier: 4,
       isClicked: false
     }
   },
@@ -17,6 +18,9 @@ export default {
     toggleIsClicked () {
       this.isClicked = !this.isClicked
       this.$emit('event', this.sectorObj)
+    },
+    formatName () {
+      return '\xa0'.repeat(this.spacingMultiplier * this.sectorObj.spaces_count) + this.sectorObj.name
     }
   }
 }

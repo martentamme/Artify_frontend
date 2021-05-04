@@ -1,37 +1,42 @@
 <template>
   <form id="form" @submit.prevent="sendDataToBack">
-    <label for="name">Name:</label>
-    <input type="text" id="name" name="name" v-model="name"><br>
-    <label>Sectors:</label>
-    <select multiple="" size="20">
+    <p>Please enter your name and pick the Sectors you are currently involved in.</p>
+    <b-form-input id="name" v-model="name" placeholder="Enter your name"></b-form-input>
+    <b-form-select id="select" multiple="" v-model="selected" size="sm">
       <custom-option
         v-for="sectorObj in sectors"
         v-bind:key="sectorObj.id"
         :value="sectorObj.id"
-        :sector-name=formatName(sectorObj)
         :sector-obj=sectorObj
         @event="handler">
       </custom-option>
-    </select><br>
-    <input type="checkbox" id="terms" name="terms" value="terms" v-model="terms">
-    <label for="terms">Agree to terms</label><br>
-    <input type="submit" value="Submit">
+    </b-form-select>
+    <b-form-checkbox
+      id="checkbox-1"
+      v-model="terms"
+      name="checkbox-1"
+      value="accepted"
+      unchecked-value="not_accepted">
+      Agree to terms
+    </b-form-checkbox>
+    <b-button id="submit" type="submit" value="Submit">Save</b-button>
+    <p id="error">{{errorMsg}}</p>
   </form>
 </template>
 
 <script>
 import axios from 'axios'
 import CustomOption from './CustomOption'
-
 export default {
   name: 'Home',
   components: { CustomOption },
   data () {
     return {
+      errorMsg: '',
+      selected: [],
       options: [],
       terms: false,
       name: null,
-      spacingMultiplier: 4,
       sectors: null,
       user_id: null
     }
@@ -51,7 +56,8 @@ export default {
       }
     },
     postUserInput () {
-      if (this.name && this.terms && this.options !== []) {
+      if (this.name && this.terms && this.options !== 0) {
+        this.inputIsCorrect()
         axios
           .post('http://localhost:8080/user_input', {
             name: this.name,
@@ -62,10 +68,19 @@ export default {
             this.user_id = response.data.user_id
             console.log(response)
           })
+      } else {
+        this.error()
       }
     },
     putUserInput () {
-      if (this.user_id && this.name && this.terms && this.options !== []) {
+      if (this.user_id && this.name && this.terms && this.options.length !== 0) {
+        this.inputIsCorrect()
+        console.log({
+          user_id: this.user_id,
+          name: this.name,
+          sector_id: this.options,
+          agreement: this.terms
+        })
         axios
           .put('http://localhost:8080/user_input', {
             user_id: this.user_id,
@@ -76,10 +91,9 @@ export default {
           .then((response) => {
             console.log(response)
           })
+      } else {
+        this.error()
       }
-    },
-    formatName (sectorObj) {
-      return '\xa0'.repeat(this.spacingMultiplier * sectorObj.indent) + sectorObj.name
     },
     handler (params) {
       this.saveOption(params)
@@ -91,11 +105,41 @@ export default {
         const index = this.options.indexOf(obj.id)
         this.options.splice(index, 1)
       }
+    },
+    error () {
+      this.errorMsg = 'Your input is incorrect!'
+    },
+    inputIsCorrect () {
+      this.errorMsg = ''
     }
   },
   mounted () {
     this.getSectorsFromBack()
   }
 }
-
 </script>
+
+<style>
+  #name {
+    margin: auto;
+    width: 30%;
+    justify-content: center;
+  }
+  #select {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    width: 30%;
+    height: 250px;
+    justify-content: center;
+  }
+  #submit {
+    margin-top: 10px;
+  }
+  #form {
+    margin-top: 50px;
+  }
+  #error {
+    margin-top: 10px;
+    color: red;
+  }
+</style>
